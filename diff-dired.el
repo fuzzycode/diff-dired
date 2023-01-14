@@ -27,13 +27,42 @@
   :prefix "diff-dired-"
   :group 'diff-dired)
 
+(defun diff-dired-sentinel (proc state)
+  "Sentinel for \\[diff-dired] processes."
+  (let ((buf (process-buffer proc)))
+    (if (buffer-name buf)
+        (with-current-buffer buf
+          (let ((inhibit-read-only t))
+            (save-excursion
+              (save-restriction
+                (widen)
+                ;; `find-dired-filter' puts two whitespace characters
+                ;; at the beginning of every line.
+                (narrow-to-region (point) (- (point-max) 2))
+                (diff-dired-sort-by-filename)
+                (widen))
+              (setq mode-line-process
+                    (format ":%s" (process-status proc)))
+              ;; Since the buffer and mode line will show that the
+              ;; process is dead, we can delete it now.  Otherwise it
+              ;; will stay around until M-x `list-processes'.
+              (delete-process proc)
+              (force-mode-line-update)))))))
+
+(defun diff-dired-sort-by-filename ()
+  "Sort entries in *Diff Dired* buffer by file name lexicographically."
+  (sort-subr nil 'forward-line 'end-of-line
+             (lambda ()
+               (buffer-substring-no-properties
+                (next-single-property-change
+                 (point) 'dired-filename)
+                (line-end-position)))))
 ;;;###autoload
 (defun diff-dired (filter base compare)
   ""
-
   (let ((dired-buffers dired-buffers)
         (diff-dired-buffer-name "*Diff Dired*")
-        (cmd (concat "git diff --name-only --no-color " (format "--diff-filter=%s" filter) " " base " " compare " | xargs gls -ldh --quoting-style=literal &"))
+        (cmd (concat "git diff --name-only --no-color " (format "--diff-filter=%s" filter) " " base " " compare " | xargs gls -ldh --quoting-style=literal"))
         (root (magit-toplevel)))
 
     ;; Check that it's really a directory.
@@ -50,7 +79,7 @@
 
       (setq default-directory root)
       ;; Start the process.
-      (shell-command cmd (current-buffer))
+      (async-shell-command cmd (current-buffer))
 
       ;; enable Dired mode
       (dired-mode root)
@@ -82,7 +111,7 @@
 
       (let ((proc (get-buffer-process (current-buffer))))
         (set-process-filter proc (function find-dired-filter))
-        (set-process-sentinel proc (function find-dired-sentinel))
+        (set-process-sentinel proc (function diff-dired-sentinel))
         ;; Initialize the process marker; it is used by the filter.
         (move-marker (process-mark proc) 1 (current-buffer)))
       (setq mode-line-process '(":%s")))))
@@ -107,7 +136,7 @@
   ""
   (interactive (list (magit-read-branch "Base" (magit-main-branch))
                      (magit-read-branch "Compare" (magit-get-current-branch))))
-  (diff-dired "C" base compare))
+  (diff-dired "d" base compare))
 
 (defun diff-dired-cleanup ()
   "Clean up diff-dired created temp buffers for multiple searching processes."
