@@ -9,7 +9,7 @@
 ;; Version: 0.0.1
 ;; Keywords: convenience extensions files vc
 ;; Homepage: https://github.com/fuzzycode/diff-dired
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "25.1") magit)
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -32,31 +32,11 @@
   (let ((buf (process-buffer proc)))
     (if (buffer-name buf)
         (with-current-buffer buf
-          (let ((inhibit-read-only t))
-            (save-excursion
-              (save-restriction
-                (widen)
-                ;; `find-dired-filter' puts two whitespace characters
-                ;; at the beginning of every line.
-                (narrow-to-region (point) (- (point-max) 2))
-                (diff-dired-sort-by-filename)
-                (widen))
-              (setq mode-line-process
-                    (format ":%s" (process-status proc)))
-              ;; Since the buffer and mode line will show that the
-              ;; process is dead, we can delete it now.  Otherwise it
-              ;; will stay around until M-x `list-processes'.
-              (delete-process proc)
-              (force-mode-line-update)))))))
+          (save-excursion
+            (setq mode-line-process (format ":%s" (process-status proc)))
+            (delete-process proc)
+            (force-mode-line-update))))))
 
-(defun diff-dired-sort-by-filename ()
-  "Sort entries in *Diff Dired* buffer by file name lexicographically."
-  (sort-subr nil 'forward-line 'end-of-line
-             (lambda ()
-               (buffer-substring-no-properties
-                (next-single-property-change
-                 (point) 'dired-filename)
-                (line-end-position)))))
 ;;;###autoload
 (defun diff-dired (filter base compare)
   ""
