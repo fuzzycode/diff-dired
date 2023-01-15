@@ -132,6 +132,27 @@
   (diff-dired "M" base compare))
 
 ;;;###autoload
+(defun diff-dired-list-renamed (base compare)
+  ""
+  (interactive (list (magit-read-branch "Base" (magit-main-branch))
+                     (magit-read-branch "Compare" (magit-get-current-branch))))
+  (diff-dired "R" base compare))
+
+;;;###autoload
+(defun diff-dired-list-coppied (base compare)
+  ""
+  (interactive (list (magit-read-branch "Base" (magit-main-branch))
+                     (magit-read-branch "Compare" (magit-get-current-branch))))
+  (diff-dired "C" base compare))
+
+;;;###autoload
+(defun diff-dired-list-type-changed (base compare)
+  ""
+  (interactive (list (magit-read-branch "Base" (magit-main-branch))
+                     (magit-read-branch "Compare" (magit-get-current-branch))))
+  (diff-dired "T" base compare))
+
+;;;###autoload
 (defun diff-dired-list-changed (base compare)
   ""
   (interactive (list (magit-read-branch "Base" (magit-main-branch))
