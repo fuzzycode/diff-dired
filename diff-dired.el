@@ -9,7 +9,7 @@
 ;; Version: 0.0.1
 ;; Keywords: convenience extensions files vc
 ;; Homepage: https://github.com/fuzzycode/diff-dired
-;; Package-Requires: ((emacs "25.1") magit)
+;; Package-Requires: ((emacs "25.1") (magit "3.0"))
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -19,7 +19,7 @@
 ;;
 ;;; Code:
 
-(require 'find-dired)
+(require 'dired)
 (require 'magit)
 
 (defgroup diff-dired nil
@@ -37,10 +37,40 @@
             (delete-process proc)
             (force-mode-line-update))))))
 
+(defun diff-dired-filter (proc string)
+  "Filter for \\[diff-dired] processes."
+  (let ((buf (process-buffer proc))
+        (inhibit-read-only t))
+    (if (buffer-name buf)
+        (with-current-buffer buf
+          (save-excursion
+            (save-restriction
+              (widen)
+              (let ((buffer-read-only nil)
+                    (beg (point-max)))
+                (goto-char beg)
+                (insert string)
+                (goto-char beg)
+                (or (looking-at "^")
+                    (forward-line 1))
+                (while (looking-at "^")
+                  (insert "  ")
+                  (forward-line 1))
+                ;; Find all the complete lines in the unprocessed
+                ;; output and process it to add text properties.
+                (goto-char (point-max))
+                (if (search-backward "\n" (process-mark proc) t)
+                    (progn
+                      (dired-insert-set-properties (process-mark proc)
+                                                   (1+ (point)))
+                      (move-marker (process-mark proc) (1+ (point)))))))))
+      ;; The buffer has been killed.
+      (delete-process proc))))
+
 ;;;###autoload
 (defun diff-dired (filter base compare)
   ""
-  (let ((dired-buffers dired-buffers)
+  (let ((dired-buffers nil)
         (diff-dired-buffer-name "*Diff Dired*")
         (cmd (concat "git diff --name-only --no-color " (format "--diff-filter=%s" filter) " " base " " compare " | xargs gls -ldh --quoting-style=literal"))
         (root (magit-toplevel)))
@@ -90,7 +120,7 @@
       (setq buffer-read-only t)
 
       (let ((proc (get-buffer-process (current-buffer))))
-        (set-process-filter proc (function find-dired-filter))
+        (set-process-filter proc (function diff-dired-filter))
         (set-process-sentinel proc (function diff-dired-sentinel))
         ;; Initialize the process marker; it is used by the filter.
         (move-marker (process-mark proc) 1 (current-buffer)))
@@ -147,6 +177,7 @@
              (string-match-p "*Diff Dired*" buffer-name))
            (mapcar 'buffer-name (buffer-list)))))
 
+;;;###autoload
 (add-hook 'kill-emacs-hook #'diff-dired-cleanup)
 
 (provide 'diff-dired)
