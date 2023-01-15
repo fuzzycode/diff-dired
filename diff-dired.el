@@ -14,18 +14,15 @@
 ;; This file is not part of GNU Emacs.
 ;;
 ;;; Commentary:
-;; Insert some commentary
+;; A package to list changed files between two branches in a Dired enabled buffer
 ;;
+;; The listing makes use of git's --diff-filter option to provide different listings
+;; of files that have in some way been modified between two different branches.
 ;;
 ;;; Code:
 
 (require 'dired)
 (require 'magit)
-
-(defgroup diff-dired nil
-  "diff-dired customize group."
-  :prefix "diff-dired-"
-  :group 'diff-dired)
 
 (defun diff-dired-sentinel (proc state)
   "Sentinel for \\[diff-dired] processes."
@@ -69,15 +66,15 @@
 
 ;;;###autoload
 (defun diff-dired (filter base compare)
-  ""
+  "Calculate the diff between BASE and COMPARE using FILTER."
   (let ((dired-buffers nil)
         (diff-dired-buffer-name "*Diff Dired*")
         (cmd (concat "git diff --name-only --no-color " (format "--diff-filter=%s" filter) " " base " " compare " | xargs gls -ldh --quoting-style=literal"))
         (root (magit-toplevel)))
 
     ;; Check that it's really a directory.
-    (or (file-directory-p root)
-        (error "diff-dired needs a directory: %s" root))
+    (unless root
+      (error "%s is not a git directory" root))
 
     (with-current-buffer (get-buffer-create diff-dired-buffer-name)
       ;; prepare buffer
@@ -129,42 +126,42 @@
 
 ;;;###autoload
 (defun diff-dired-list-added (base compare)
-  ""
+  "List added files between BASE and COMPARE."
   (interactive (list (magit-read-branch "Base" (magit-main-branch))
                      (magit-read-branch "Compare" (magit-get-current-branch))))
   (diff-dired "A" base compare))
 
 ;;;###autoload
 (defun diff-dired-list-modified (base compare)
-  ""
+  "List modified files between BASE and COMPARE."
   (interactive (list (magit-read-branch "Base" (magit-main-branch))
                      (magit-read-branch "Compare" (magit-get-current-branch))))
   (diff-dired "M" base compare))
 
 ;;;###autoload
 (defun diff-dired-list-renamed (base compare)
-  ""
+  "List renamed files between BASE and COMPARE."
   (interactive (list (magit-read-branch "Base" (magit-main-branch))
                      (magit-read-branch "Compare" (magit-get-current-branch))))
   (diff-dired "R" base compare))
 
 ;;;###autoload
 (defun diff-dired-list-coppied (base compare)
-  ""
+  "List coppied files between BASE and COMPARE."
   (interactive (list (magit-read-branch "Base" (magit-main-branch))
                      (magit-read-branch "Compare" (magit-get-current-branch))))
   (diff-dired "C" base compare))
 
 ;;;###autoload
 (defun diff-dired-list-type-changed (base compare)
-  ""
+  "List files who's type has changed between BASE and COMPARE."
   (interactive (list (magit-read-branch "Base" (magit-main-branch))
                      (magit-read-branch "Compare" (magit-get-current-branch))))
   (diff-dired "T" base compare))
 
 ;;;###autoload
 (defun diff-dired-list-changed (base compare)
-  ""
+  "List all changed files except deleted ones between BASE and COMPARE."
   (interactive (list (magit-read-branch "Base" (magit-main-branch))
                      (magit-read-branch "Compare" (magit-get-current-branch))))
   (diff-dired "d" base compare))
