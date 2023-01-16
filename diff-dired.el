@@ -65,11 +65,11 @@
       (delete-process proc))))
 
 ;;;###autoload
-(defun diff-dired (filter base compare)
-  "Calculate the diff between BASE and COMPARE using FILTER."
+(defun diff-dired (filter base)
+  "Calculate the diff between BASE and HEAD using FILTER."
   (let ((dired-buffers nil)
         (diff-dired-buffer-name "*Diff Dired*")
-        (cmd (concat "git diff --name-only --no-color " (format "--diff-filter=%s" filter) " " base " " compare " | xargs gls -ldh --quoting-style=literal"))
+        (cmd (concat "git diff --name-only --no-color " (format "--diff-filter=%s" filter) " " base " | xargs gls -ldh --quoting-style=literal"))
         (root (magit-toplevel)))
 
     ;; Check that it's really a directory.
@@ -99,7 +99,7 @@
       (set (make-local-variable 'dired-sort-inhibit) t)
       (set (make-local-variable 'revert-buffer-function)
            `(lambda (ignore-auto noconfirm)
-              (diff-dired ,filter ,base ,compare)))
+              (diff-dired ,filter ,base)))
 
       (set (make-local-variable 'dired-subdir-alist)
            (list (cons default-directory (point-min-marker))))
@@ -125,46 +125,40 @@
 
 
 ;;;###autoload
-(defun diff-dired-list-added (base compare)
-  "List added files between BASE and COMPARE."
-  (interactive (list (magit-read-branch "Base" (magit-main-branch))
-                     (magit-read-branch "Compare" (magit-get-current-branch))))
-  (diff-dired "A" base compare))
+(defun diff-dired-list-added (base)
+  "List added files between BASE and HEAD."
+  (interactive (list (magit-read-branch "Base" (magit-main-branch))))
+  (diff-dired "A" base))
 
 ;;;###autoload
-(defun diff-dired-list-modified (base compare)
-  "List modified files between BASE and COMPARE."
-  (interactive (list (magit-read-branch "Base" (magit-main-branch))
-                     (magit-read-branch "Compare" (magit-get-current-branch))))
-  (diff-dired "M" base compare))
+(defun diff-dired-list-modified (base)
+  "List modified files between BASE and HEAD."
+  (interactive (list (magit-read-branch "Base" (magit-main-branch))))
+  (diff-dired "M" base))
 
 ;;;###autoload
-(defun diff-dired-list-renamed (base compare)
-  "List renamed files between BASE and COMPARE."
-  (interactive (list (magit-read-branch "Base" (magit-main-branch))
-                     (magit-read-branch "Compare" (magit-get-current-branch))))
-  (diff-dired "R" base compare))
+(defun diff-dired-list-renamed (base)
+  "List renamed files between BASE and HEAD."
+  (interactive (list (magit-read-branch "Base" (magit-main-branch))))
+  (diff-dired "R" base))
 
 ;;;###autoload
-(defun diff-dired-list-coppied (base compare)
-  "List coppied files between BASE and COMPARE."
-  (interactive (list (magit-read-branch "Base" (magit-main-branch))
-                     (magit-read-branch "Compare" (magit-get-current-branch))))
-  (diff-dired "C" base compare))
+(defun diff-dired-list-coppied (base)
+  "List coppied files between BASE and HEAD."
+  (interactive (list (magit-read-branch "Base" (magit-main-branch))))
+  (diff-dired "C" base))
 
 ;;;###autoload
-(defun diff-dired-list-type-changed (base compare)
-  "List files who's type has changed between BASE and COMPARE."
-  (interactive (list (magit-read-branch "Base" (magit-main-branch))
-                     (magit-read-branch "Compare" (magit-get-current-branch))))
-  (diff-dired "T" base compare))
+(defun diff-dired-list-type-changed (base)
+  "List files who's type has changed between BASE and HEAD."
+  (interactive (list (magit-read-branch "Base" (magit-main-branch))))
+  (diff-dired "T" base))
 
 ;;;###autoload
-(defun diff-dired-list-changed (base compare)
-  "List all changed files except deleted ones between BASE and COMPARE."
-  (interactive (list (magit-read-branch "Base" (magit-main-branch))
-                     (magit-read-branch "Compare" (magit-get-current-branch))))
-  (diff-dired "d" base compare))
+(defun diff-dired-list-changed (base)
+  "List all changed files except deleted ones between BASE and HEAD."
+  (interactive (list (magit-read-branch "Base" (magit-main-branch))))
+  (diff-dired "d" base))
 
 (defun diff-dired-cleanup ()
   "Clean up diff-dired created temp buffers for multiple searching processes."
