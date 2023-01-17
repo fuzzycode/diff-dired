@@ -64,7 +64,6 @@
       ;; The buffer has been killed.
       (delete-process proc))))
 
-;;;###autoload
 (defun diff-dired (filter base)
   "Calculate the diff between BASE and HEAD using FILTER."
   (let ((dired-buffers nil)
