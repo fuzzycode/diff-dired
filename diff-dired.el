@@ -167,7 +167,6 @@
              (string-match-p "*Diff Dired*" buffer-name))
            (mapcar 'buffer-name (buffer-list)))))
 
-;;;###autoload
 (add-hook 'kill-emacs-hook #'diff-dired-cleanup)
 
 (provide 'diff-dired)
