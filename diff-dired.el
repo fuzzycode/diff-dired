@@ -159,15 +159,15 @@
   (interactive (list (magit-read-branch "Base" (magit-main-branch))))
   (diff-dired "d" base))
 
-;; (defun diff-dired-cleanup ()
-;;   "Clean up diff-dired created temp buffers for multiple searching processes."
-;;   (mapcar 'kill-buffer
-;;           (seq-filter
-;;            (lambda (buffer-name)
-;;              (string-match-p "*Diff Dired*" buffer-name))
-;;            (mapcar 'buffer-name (buffer-list)))))
+(defun diff-dired-cleanup ()
+  "Clean up diff-dired created temp buffers for multiple searching processes."
+  (mapcar 'kill-buffer
+          (seq-filter
+           (lambda (buffer-name)
+             (string-match-p "*Diff Dired*" buffer-name))
+           (mapcar 'buffer-name (buffer-list)))))
 
-;; (add-hook 'kill-emacs-hook #'diff-dired-cleanup)
+(add-hook 'kill-emacs-hook #'diff-dired-cleanup)
 
 (provide 'diff-dired)
 ;;; diff-dired.el ends here
