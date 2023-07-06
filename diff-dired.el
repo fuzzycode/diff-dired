@@ -68,7 +68,7 @@
   "Calculate the diff between BASE and HEAD using FILTER."
   (let ((dired-buffers nil)
         (diff-dired-buffer-name "*Diff Dired*")
-        (cmd (concat "git diff --name-only --no-color " (format "--diff-filter=%s" filter) " " base " | xargs gls -ldh --quoting-style=literal"))
+        (cmd (concat "git log --raw --no-merges --name-only --no-color --pretty='' --diff-filter='" filter "' " base "..HEAD"  " | xargs gls -ldh --quoting-style=literal"))
         (root (magit-toplevel)))
 
     ;; Check that it's really a directory.
